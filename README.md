@@ -347,6 +347,6 @@ MIT — customize the license in `construct.yaml` to match your distribution pre
 
 <div align="center">
 
-Part of the [Constructs Network](https://constructs.network) · Built on [Loa](https://github.com/0xHoneyJar/loa)
+Part of the [Constructs Network](https://constructs.network) · Ridden with [Loa](https://github.com/0xHoneyJar/loa)
 
 </div>
