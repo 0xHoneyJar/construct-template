@@ -4,19 +4,19 @@
 
 schema_version: 3
 
-# Display name for registry and UI
-name: "My Construct"
+# CUSTOMIZE: Display name for registry and UI
+name: "Code Review Assistant"
 
-# URL-safe identifier (kebab-case, 2+ chars)
-slug: my-construct
+# CUSTOMIZE: URL-safe identifier (kebab-case, 2+ chars)
+slug: code-review-assistant
 
 # Semantic version — bump on each release
 version: 1.0.0
 
-# One-line description shown in registry search results
-description: "A brief description of what this construct does"
+# CUSTOMIZE: One-line description shown in registry search results
+description: "Catches production issues by blast radius — the top 3-5 things that would hurt your users most"
 
-# Your name or organization
+# CUSTOMIZE: Your name or organization
 author: your-name
 
 # SPDX license identifier
@@ -25,33 +25,42 @@ license: MIT
 # Skills provided by this construct
 # Each skill maps to a directory under skills/
 skills:
-  - slug: example-skill
-    path: skills/example-skill
+  # A minimal skill — fast code review pass
+  - slug: quick-review
+    path: skills/example-simple
+
+  # A full skill — documentation generation with quality gates
+  - slug: write-docs
+    path: skills/example-full
 
 # Slash commands registered in the runtime
 # Each command maps to a markdown file under commands/
 commands:
-  - name: example-command
+  - name: quick-review
     path: commands/example-command.md
 
-# Repository metadata (auto-populated by extraction script)
+# Repository metadata
 repository:
-  url: https://github.com/your-org/construct-my-construct.git
-  homepage: https://constructs.network/constructs/my-construct
+  url: https://github.com/your-org/construct-code-review.git
+  homepage: https://constructs.network/constructs/code-review-assistant
 
-# Event bus integration (optional)
+# Event bus integration (optional — Level 2)
+# Uncomment when your construct emits or consumes events from other constructs
 # events:
 #   emits:
-#     - type: forge.my-construct.something_happened
-#       description: Emitted when something happens
+#     - type: forge.code-review.issues_found
+#       description: Emitted when review finds issues
 #       data_schema:
-#         entity_id: string
+#         file_path: string
+#         severity: string
+#         count: number
 #   consumes:
-#     - event: forge.other-construct.event_name
+#     - event: forge.observer.feedback_captured
 
-# Dependencies on other construct packs (optional)
+# Dependencies on other construct packs (optional — Level 2)
+# Uncomment when your construct depends on another
 # pack_dependencies:
-#   - slug: other-construct
+#   - slug: observer
 #     version: ">=1.0.0"
 
 # Identity files for persona and expertise
@@ -60,10 +69,10 @@ identity:
   expertise: identity/expertise.yaml
 
 # Post-install hook (optional)
-# hooks:
-#   post_install: scripts/install.sh
+hooks:
+  post_install: scripts/install.sh
 
 # Quick start command shown after installation
 quick_start:
-  command: /example-command
-  description: get started with this construct
+  command: /quick-review
+  description: "Run a fast review of your latest changes — surfaces the top issues by blast radius"
