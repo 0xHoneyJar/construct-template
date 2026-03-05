@@ -1,0 +1,16 @@
+slug: quick-review
+name: Quick Review
+description: Fast code review focused on the most impactful issues
+version: 1.0.0
+
+capabilities:
+  model_tier: sonnet
+  danger_level: safe
+  effort_hint: small
+  downgrade_allowed: true
+  execution_hint: sequential
+  requires:
+    native_runtime: false
+    tool_calling: true
+    thinking_traces: false
+    vision: false

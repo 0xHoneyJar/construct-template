@@ -1,0 +1,20 @@
+slug: write-docs
+name: Write Docs
+description: Generate documentation from code with structured analysis and quality gates
+version: 1.0.0
+
+capabilities:
+  model_tier: sonnet
+  danger_level: moderate
+  effort_hint: medium
+  downgrade_allowed: true
+  execution_hint: sequential
+  requires:
+    native_runtime: false
+    tool_calling: true
+    thinking_traces: false
+    vision: false
+
+dependencies:
+  grimoire_paths:
+    - docs/
