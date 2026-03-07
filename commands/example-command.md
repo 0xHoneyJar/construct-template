@@ -23,8 +23,12 @@ agent_path: "skills/example-simple"
 context_files:
   - path: "CLAUDE.md"
     required: true
+  # persona.yaml activates the construct's cognitive frame and voice.
+  # Without it, the agent runs the skill mechanically but without personality.
+  - path: "identity/persona.yaml"
+    required: true
   # CUSTOMIZE: Add your identity narrative for richer persona activation
-  # - path: "identity/ALEXANDER.md"
+  # - path: "identity/NARRATIVE.md"
   #   required: false
   # CUSTOMIZE: Add domain context files
   # - path: "contexts/base/domain-context.md"
