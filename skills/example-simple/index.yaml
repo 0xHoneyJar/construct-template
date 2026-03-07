@@ -1,7 +1,18 @@
 slug: quick-review
 name: Quick Review
-description: Fast code review focused on the most impactful issues
+
+# CUSTOMIZE: Use the "Use this skill IF..." pattern for routing clarity.
+description: |
+  Use this skill IF user invokes `/quick-review` OR needs a fast code review
+  focused on the most impactful issues by blast radius.
 version: 1.0.0
+
+# CUSTOMIZE: Natural language patterns that trigger this skill.
+triggers:
+  - "/quick-review"
+  - "review my code"
+  - "code review"
+  - "check for issues"
 
 capabilities:
   model_tier: sonnet
