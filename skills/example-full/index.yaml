@@ -1,7 +1,27 @@
 slug: write-docs
 name: Write Docs
-description: Generate documentation from code with structured analysis and quality gates
+
+# CUSTOMIZE: Use the "Use this skill IF..." pattern for routing clarity.
+# This tells the runtime WHEN to activate this skill, not just what it does.
+description: |
+  Use this skill IF user invokes `/write-docs` OR needs documentation
+  generated from code with traced examples and quality gates.
+
+  Produces documentation files to `docs/`:
+  - docs/api/<module>.md
+  - docs/components/<component>.md
+  - docs/guides/<topic>.md
 version: 1.0.0
+
+# CUSTOMIZE: Natural language patterns that trigger this skill.
+# These enable routing from conversational requests, not just /commands.
+# Without triggers, the skill can only be invoked via explicit slash command.
+triggers:
+  - "/write-docs"
+  - "generate documentation"
+  - "document this code"
+  - "write docs"
+  - "API documentation"
 
 capabilities:
   model_tier: sonnet
