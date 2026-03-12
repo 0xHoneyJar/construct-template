@@ -16,6 +16,9 @@ version: 1.0.0
 # CUSTOMIZE: One-line description shown in registry search results
 description: "Catches production issues by blast radius — the top 3-5 things that would hurt your users most"
 
+# CUSTOMIZE: Storefront tagline (noun phrase, max 80 chars, no articles or superlatives)
+short_description: "Production issue triage"
+
 # CUSTOMIZE: Your name or organization
 author: your-name
 
