@@ -25,6 +25,17 @@ author: your-name
 # SPDX license identifier
 license: MIT
 
+# Construct archetype — what kind of pack this is
+type: skill-pack
+
+# Network visibility — must be 'public' to appear on constructs.network
+visibility: public
+
+# Domain tags for discovery and categorization
+# See category list: marketing, development, security, analytics, documentation, operations, design, infrastructure
+domain:
+  - development
+
 # Skills provided by this construct
 # Each skill maps to a directory under skills/
 skills:
@@ -42,23 +53,37 @@ commands:
   - name: quick-review
     path: commands/example-command.md
 
+# Composition — how this construct connects to others
+# The grimoire path is the interface. Constructs that share paths are composed.
+compose_with:
+  - slug: observer
+    relationship: "Consumes user truth for review grounding"
+
+# Grimoire paths this construct reads from and writes to
+# These make implicit composition visible on the network graph
+composition_paths:
+  writes:
+    - grimoires/code-review/findings/
+  reads: []
+
 # Repository metadata
 repository:
   url: https://github.com/your-org/construct-code-review.git
   homepage: https://constructs.network/constructs/code-review-assistant
 
-# Event bus integration (optional — Level 2)
-# Uncomment when your construct emits or consumes events from other constructs
-# events:
-#   emits:
-#     - type: forge.code-review.issues_found
-#       description: Emitted when review finds issues
-#       data_schema:
-#         file_path: string
-#         severity: string
-#         count: number
-#   consumes:
-#     - event: forge.observer.feedback_captured
+# Event bus integration
+# emits: declare what your construct produces (encouraged from day one)
+# consumes: declare what you need from other constructs (add when real)
+events:
+  emits:
+    - type: forge.code-review.issues_found
+      description: Emitted when review finds issues
+  consumes: []
+
+# Governance (for cross-cutting constructs like vocabulary, taste, design rules)
+# Uncomment if your construct constrains how other constructs behave
+# governs: []
+# governed_by: []
 
 # Dependencies on other construct packs (optional — Level 2)
 # Uncomment when your construct depends on another

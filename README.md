@@ -62,6 +62,24 @@ graph LR
 
 ---
 
+## Composition
+
+Constructs connect through grimoire paths — directories they write to and read from. Declare yours in `construct.yaml`:
+
+```yaml
+composition_paths:
+  writes:
+    - grimoires/my-construct/output/
+  reads:
+    - grimoires/laboratory/canvases/  # consume observer data
+```
+
+The network graph shows these connections automatically. No event bus needed — the filesystem IS the interface.
+
+See [Composability Guide](https://constructs.network/docs/composition) for patterns.
+
+---
+
 ## Two Example Skills
 
 **`example-simple`** — The starter. Trigger, workflow, boundaries. If your skill is one focused action, start here.
