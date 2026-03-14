@@ -15,6 +15,10 @@ skills/                     # Skill implementations
     index.yaml              # Metadata, triggers, capability routing hints
     SKILL.md                # Instructions and workflow
 commands/                   # Slash command files with routing frontmatter
+scripts/                    # Executable scripts invoked by skills
+  lib/
+    construct-runtime.ts    # Shared utilities (credentials, output, progress)
+  install.sh                # Post-install hook
 schemas/                    # Validation schemas
 contexts/                   # Domain context files (optional)
 ```
@@ -125,6 +129,47 @@ Register in `construct.yaml`:
 commands:
   - name: my-command
     path: commands/my-command.md
+```
+
+## Adding Scripts
+
+If your construct ships executable scripts (search tools, data pipelines, etc.), follow the **Nakamoto protocol** for agent-clean I/O:
+
+| Output | Destination | Who reads it |
+|--------|-------------|--------------|
+| Structured result | **stdout** (JSON via `writeSync`) | Agent |
+| Progress, retries, timing | **stderr** (`process.stderr.write`) | User terminal |
+| Full reports, trails | **file** (`grimoires/{slug}/`) | Agent via Read tool |
+
+Use the shared utility at `scripts/lib/construct-runtime.ts`:
+
+```typescript
+import { loadEnvFile, resolveCredential, resolveOutputDir, output, fatal } from "./lib/construct-runtime.ts";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+
+// 1. Load credentials (cascade: env → .env → ~/.loa/credentials.json)
+loadEnvFile(SCRIPT_DIR);
+const key = resolveCredential("MY_API_KEY");
+if (!key) fatal("Missing MY_API_KEY", { hint: "Set it in .env or ~/.loa/credentials.json" });
+
+// 2. Resolve output dir (pack-aware)
+const OUTPUT_DIR = resolveOutputDir(SCRIPT_DIR, "my-construct");
+
+// 3. Do work, write progress to stderr
+process.stderr.write("[my-tool] Running...\n");
+
+// 4. One JSON output at exit
+output({ result: "...", output_dir: OUTPUT_DIR });
+```
+
+Reference: `docs/guides/script-conventions.md` in [loa-constructs](https://github.com/0xHoneyJar/loa-constructs).
+
+Invoke scripts from SKILL.md via Bash tool:
+```
+npx tsx scripts/my-tool.ts --query "input"
 ```
 
 ## Adding Domain Context
