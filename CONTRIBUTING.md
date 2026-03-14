@@ -16,6 +16,7 @@ skills/                     # Skill implementations
     SKILL.md                # Instructions and workflow
 commands/                   # Slash command files with routing frontmatter
 scripts/                    # Executable scripts invoked by skills
+  MANIFEST.yaml             # Machine-readable tool declarations (agent discovery)
   lib/
     construct-runtime.ts    # Shared utilities (credentials, output, progress)
   install.sh                # Post-install hook
@@ -133,7 +134,73 @@ commands:
 
 ## Adding Scripts
 
-If your construct ships executable scripts (search tools, data pipelines, etc.), follow the **Nakamoto protocol** for agent-clean I/O:
+If your construct ships executable scripts (search tools, data pipelines, etc.), there are two concerns: **navigability** (how agents discover your scripts) and **I/O** (how scripts communicate with agents).
+
+### Navigability — scripts/MANIFEST.yaml
+
+Every construct that ships scripts should include a `scripts/MANIFEST.yaml` declaring what's available. This is the CLI equivalent of Anthropic's `input_schema` or MCP's `tools/list` — it lets agents discover your tools without reading source code.
+
+```yaml
+scripts:
+  - name: my-search
+    description: "Run grounded search for research sessions"
+    entry: my-search.ts
+    runtime: npx tsx
+    args:
+      - name: --query
+        type: string
+        required: true
+        description: "The search topic"
+    output:
+      format: json
+      fields:
+        findings: "string — synthesized results"
+        sources: "array of {title, url}"
+    credentials:
+      - name: MY_API_KEY
+        required: true
+    danger_level: safe
+```
+
+See `scripts/MANIFEST.yaml` for the full template with examples across TypeScript, Bash, and Python.
+
+**Why this exists**: An agent landing in `scripts/` faces `.ts` and `.sh` files with no context. The manifest answers three questions every agent asks:
+1. **What's here?** — script names and descriptions (routing)
+2. **How do I call it?** — runtime, args, types (invocation)
+3. **What comes back?** — output format, side effects, credentials needed (expectations)
+
+This maps directly to how every major AI firm structures tool calling:
+
+| Our manifest field | Anthropic equivalent | OpenAI equivalent | MCP equivalent |
+|-------------------|---------------------|-------------------|----------------|
+| `name` + `description` | `tool.name` + `tool.description` | `function.name` + `function.description` | `tool.name` + `tool.description` |
+| `args` | `tool.input_schema` | `function.parameters` | `tool.inputSchema` |
+| `output.format` + `output.fields` | `tool_result` content | function return value | `tool.outputSchema` |
+| `danger_level` | (system prompt) | (not formalized) | `tool.annotations.destructiveHint` |
+| `credentials` | (not formalized) | (not formalized) | (not formalized) |
+
+### Self-description — --help
+
+Scripts should support `--help` so agents can discover capabilities at runtime:
+
+```
+$ npx tsx scripts/my-search.ts --help
+my-search — Run grounded search for research sessions
+
+Usage: npx tsx scripts/my-search.ts --query <string> [--depth <int>] [--model <string>]
+
+Arguments:
+  --query    (required) The search topic
+  --depth    (optional, default: 2) Number of search passes (0-4)
+  --model    (optional) Override the default model
+
+Output: JSON to stdout
+Credentials: GEMINI_API_KEY (required)
+```
+
+This is not a prescription — implement it however fits your language. Python's `argparse` gives this for free. For TypeScript and Bash, see the reference implementations below.
+
+### I/O — Nakamoto protocol
 
 | Output | Destination | Who reads it |
 |--------|-------------|--------------|
@@ -165,11 +232,22 @@ process.stderr.write("[my-tool] Running...\n");
 output({ result: "...", output_dir: OUTPUT_DIR });
 ```
 
+### Reference implementations
+
+| Language | Construct | Script | Pattern |
+|----------|-----------|--------|---------|
+| TypeScript | k-hole | `dig-search.ts` | Nakamoto stdout/stderr, .env cascade, JSON output |
+| Bash | ruggy | `corpus-diff.sh` | `--help`, `--json`, unknown-flag catching, exit codes |
+| Python | the-mint | `generate-gemstone.py` | argparse (auto `--help`), env var validation |
+
 Reference: `docs/guides/script-conventions.md` in [loa-constructs](https://github.com/0xHoneyJar/loa-constructs).
 
-Invoke scripts from SKILL.md via Bash tool:
-```
-npx tsx scripts/my-tool.ts --query "input"
+### Invoking scripts from SKILL.md
+
+Tell the agent explicitly — don't assume it will discover the script:
+```markdown
+CRITICAL: You MUST run the search script via Bash tool. Do NOT skip it.
+npx tsx scripts/my-search.ts --query "<user's thread>"
 ```
 
 ## Adding Domain Context

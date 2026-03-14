@@ -1,0 +1,160 @@
+# scripts/MANIFEST.yaml — Machine-readable tool declarations
+#
+# This file lets agents discover what scripts are available, how to invoke them,
+# and what to expect back — without reading source code.
+#
+# It serves the same role as Anthropic's `input_schema`, OpenAI's `parameters`,
+# or MCP's `tools/list` — but for CLI-invoked construct scripts.
+#
+# STRUCTURE GUIDE — not implementation prescription.
+# Adapt the shape to your construct. Delete examples you don't need.
+
+# The scripts array declares each executable tool in this construct.
+# Agents read this to answer three questions:
+#   1. What's here?   (name + description)
+#   2. How do I call it?  (runtime + args)
+#   3. What comes back?   (output + side_effects)
+
+scripts:
+
+  # ── Example: TypeScript script (reference: construct-k-hole/dig-search.ts)
+  - name: my-search
+    description: "Run grounded search for interactive research sessions"
+    entry: my-search.ts
+    runtime: npx tsx
+
+    # Input contract — what args does this script accept?
+    # This is the CLI equivalent of JSON Schema `input_schema`.
+    # Types: string, integer, number, boolean, path
+    args:
+      - name: --query
+        type: string
+        required: true
+        description: "The search topic or question"
+      - name: --depth
+        type: integer
+        required: false
+        default: 2
+        description: "Number of search passes (0-4)"
+      - name: --model
+        type: string
+        required: false
+        description: "Override the default model"
+
+    # Output contract — what does the agent get back?
+    # format: json | text | file | silent
+    # When format is json, the agent parses stdout.
+    # When format is file, stdout contains a pointer (path) to the full output.
+    output:
+      format: json
+      # Describe the shape so agents know what fields to expect.
+      # This is documentation, not validation — keep it readable.
+      fields:
+        query: "string — the original query"
+        findings: "string — synthesized results"
+        sources: "array of {title, url}"
+        source_count: "integer"
+        trail_file: "string — absolute path to session trail"
+
+    # What does this script touch beyond stdout?
+    side_effects:
+      - "Appends to trail file in grimoires/{slug}/research-output/"
+
+    # What credentials does this script need?
+    # Agents can check these exist before invoking.
+    credentials:
+      - name: GEMINI_API_KEY
+        required: true
+        alternatives: [GOOGLE_API_KEY]
+        hint: "https://aistudio.google.com/apikey"
+      - name: FIRECRAWL_API_KEY
+        required: false
+        hint: "https://firecrawl.dev — enables deep URL scraping"
+
+    # Safety classification (matches construct capabilities stanza)
+    danger_level: safe
+
+  # ── Example: Bash script (reference: construct-ruggy/corpus-diff.sh)
+  - name: corpus-diff
+    description: "Compare corpus state between two git refs"
+    entry: corpus-diff.sh
+    runtime: bash
+    args:
+      - name: --ref
+        type: string
+        required: false
+        default: HEAD~1
+        description: "Git ref to compare against"
+      - name: --json
+        type: boolean
+        required: false
+        description: "Output machine-readable JSON instead of text"
+    output:
+      format: text    # or json when --json flag is passed
+      fields:
+        added: "integer — files added"
+        removed: "integer — files removed"
+        changed: "integer — files modified"
+    credentials: []
+    danger_level: safe
+
+  # ── Example: Python script (reference: construct-the-mint/generate-gemstone.py)
+  - name: generate-gemstone
+    description: "Generate gemstone texture via FAL AI"
+    entry: generate-gemstone.py
+    runtime: python
+    args:
+      - name: prompt
+        type: string
+        required: true
+        positional: true
+        description: "Text prompt for gemstone generation"
+      - name: --output
+        type: path
+        required: false
+        default: ./output/
+        description: "Directory to write generated images"
+    output:
+      format: file
+      fields:
+        path: "string — path to generated image"
+    credentials:
+      - name: FAL_KEY
+        required: true
+        hint: "https://fal.ai — image generation API key"
+    danger_level: safe
+
+  # ── Example: Pipeline script (long-running, file output)
+  - name: deep-research
+    description: "Multi-phase batch research pipeline — takes minutes, writes reports to disk"
+    entry: deep-research.ts
+    runtime: npx tsx
+    args:
+      - name: --config
+        type: string
+        required: true
+        description: "Config name (loads research-config-{name}.ts)"
+      - name: --fast
+        type: boolean
+        required: false
+        description: "Higher concurrency for faster execution"
+      - name: --discover-only
+        type: boolean
+        required: false
+        description: "Stop after discovery phase"
+    output:
+      # For long-running scripts, stdout is a compact summary with file pointers.
+      # The agent reads specific files as needed via the Read tool.
+      format: json
+      fields:
+        config: "string"
+        phase: "string — discovery | complete | error"
+        topics_completed: "integer"
+        output_dir: "string — path to research output directory"
+        files: "array of string — output filenames"
+        duration_s: "integer"
+    credentials:
+      - name: GEMINI_API_KEY
+        required: true
+        alternatives: [GOOGLE_API_KEY]
+    danger_level: safe
