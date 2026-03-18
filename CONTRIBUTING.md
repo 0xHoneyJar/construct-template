@@ -200,6 +200,21 @@ Credentials: GEMINI_API_KEY (required)
 
 This is not a prescription — implement it however fits your language. Python's `argparse` gives this for free. For TypeScript and Bash, see the reference implementations below.
 
+### Symlink safety — NEVER assume SCRIPT_DIR is inside the project
+
+When packs are installed via the global store (`~/.loa/constructs/packs/`), the local path at `.claude/constructs/packs/{slug}` is a **symlink**. Node.js resolves `import.meta.url` to the **real path**, so `SCRIPT_DIR` becomes `~/.loa/constructs/packs/{slug}/scripts/` — completely outside the project directory.
+
+This breaks two common patterns:
+- **`.env` walk-up**: walking up from `~/.loa/` never reaches the project root where `.env` lives
+- **Pack detection**: `SCRIPT_DIR.indexOf(".claude/constructs/packs/")` returns `-1` on the real path
+
+**Always use `construct-runtime.ts`** — it handles this correctly via `findProjectRoot(process.cwd())`. Never write your own `.env` walk-up from `SCRIPT_DIR`.
+
+```
+BROKEN:  import.meta.url → ~/.loa/constructs/packs/k-hole/scripts/ → walk up → ~/  (no .env)
+CORRECT: process.cwd()   → find .git/.claude → project root → .env found
+```
+
 ### I/O — Nakamoto protocol
 
 | Output | Destination | Who reads it |
@@ -217,12 +232,12 @@ import { fileURLToPath } from "url";
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
 
-// 1. Load credentials (cascade: env → .env → ~/.loa/credentials.json)
+// 1. Load credentials (symlink-safe: finds project root from cwd, then walks up)
 loadEnvFile(SCRIPT_DIR);
 const key = resolveCredential("MY_API_KEY");
 if (!key) fatal("Missing MY_API_KEY", { hint: "Set it in .env or ~/.loa/credentials.json" });
 
-// 2. Resolve output dir (pack-aware)
+// 2. Resolve output dir (symlink-safe: detects pack install via cwd project root)
 const OUTPUT_DIR = resolveOutputDir(SCRIPT_DIR, "my-construct");
 
 // 3. Do work, write progress to stderr
