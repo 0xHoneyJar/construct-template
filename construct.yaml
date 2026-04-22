@@ -59,12 +59,26 @@ compose_with:
   - slug: observer
     relationship: "Consumes user truth for review grounding"
 
-# Grimoire paths this construct reads from and writes to
-# These make implicit composition visible on the network graph
+# Grimoire paths this construct reads from and writes to.
+# SEED §12: the grimoire path IS the interface. Two constructs writing
+# to the same path compose automatically; one writing + one reading
+# forms an implicit pipe edge. Declare every real read + write here.
 composition_paths:
   writes:
     - grimoires/code-review/findings/
   reads: []
+
+# Typed streams this construct consumes and produces (doctrine §3).
+# Five primitives: Signal · Verdict · Artifact · Intent · Operator-Model.
+# Consumed at composition-build-time by construct-compose.sh to verify
+# pipe compatibility before any stage runs. Empty arrays are legal but
+# will be flagged as pipe-ambiguous by construct-validate.sh.
+streams:
+  reads:
+    - Artifact        # the pull request / diff being reviewed
+    - Operator-Model  # who the operator is — tunes depth + register
+  writes:
+    - Verdict         # the review verdict (severity-tagged findings)
 
 # Repository metadata
 repository:
@@ -91,10 +105,24 @@ events:
 #   - slug: observer
 #     version: ">=1.0.0"
 
-# Identity files for persona and expertise
+# Identity files for persona and expertise.
+#
+# The construct-invocation glossary (Tier 4 persona-handle resolution) looks
+# up personas via `identity/<HANDLE>.md` filenames — UPPERCASE_HANDLE.md per
+# convention. Examples across the ecosystem:
+#
+#   artisan/identity/ALEXANDER.md
+#   k-hole/identity/STAMETS.md
+#   observer/identity/KEEPER.md
+#
+# If your construct ships a persona, author `identity/<HANDLE>.md` so the
+# operator can invoke via `@HANDLE` or mention the persona by name. The
+# starter identity/ARCHITECT.md file in this template shows the shape.
 identity:
   persona: identity/persona.yaml
   expertise: identity/expertise.yaml
+  handles:
+    - ARCHITECT
 
 # Post-install hook (optional)
 hooks:
