@@ -64,7 +64,11 @@ graph LR
 
 ## Composition
 
-Constructs connect through grimoire paths — directories they write to and read from. Declare yours in `construct.yaml`:
+Constructs connect two ways.
+
+### 1. Grimoire paths — filesystem-layer composition
+
+Constructs connect through directories they write to and read from. Declare yours in `construct.yaml`:
 
 ```yaml
 composition_paths:
@@ -75,6 +79,23 @@ composition_paths:
 ```
 
 The network graph shows these connections automatically. No event bus needed — the filesystem IS the interface.
+
+Your `CLAUDE.md` MUST mirror these paths in a `## What You Connect To` section — operators read CLAUDE.md; the yaml is for the registry. Both must agree.
+
+### 2. Typed streams — in-memory-layer composition (doctrine v5 §17.4)
+
+For in-flight composition (runner pipe chains like `construct-compose.sh feel-audit`), declare the stream types your construct reads and writes:
+
+```yaml
+streams:
+  reads:
+    - Artifact        # file / path / content-addressable
+    - Operator-Model  # who the operator is (doctrine §14.2)
+  writes:
+    - Verdict         # evaluated judgment with severity + evidence
+```
+
+Five primitive types: **Signal** (raw observation) · **Verdict** (judgment) · **Artifact** (material) · **Intent** (operator routing signal) · **Operator-Model** (operator knowledge map). The composition runner verifies type compatibility at chain-build time — mismatches fail loud before any stage runs.
 
 See [Composability Guide](https://constructs.network/docs/composition) for patterns.
 
@@ -96,10 +117,13 @@ Both follow the same structure: what it is → how it works → the non-obvious 
 
 **`expertise.yaml`** — Bounded domains with depth ratings (1-5). Be honest. Boundaries are features — what your construct refuses to do builds trust.
 
+**`identity/<HANDLE>.md`** — Persona handles (UPPERCASE filenames, e.g. `ARCHITECT.md`). Operators invoke your construct via `@HANDLE`, `HANDLE`, or case-insensitive matches. See the starter `identity/ARCHITECT.md` for the shape.
+
 **`CLAUDE.md`** — Not documentation. Instructions injected into the AI runtime. Shapes how the agent *thinks*:
 - What it sees (the perceptual lens)
 - How it works (default behavior)
 - What it refuses (hard boundaries)
+- What it connects to (grimoire paths — MUST match `construct.yaml`)
 
 ---
 
@@ -136,6 +160,19 @@ pack_dependencies:
 ## Publish
 
 Push to GitHub. Register at [constructs.network](https://constructs.network). Others install with one command.
+
+### Auto-generated `CONSTRUCT-README.md`
+
+Post-install, Loa's butterfreezone adapter generates a per-pack `CONSTRUCT-README.md` from your `construct.yaml` + skills + identity/. It surfaces:
+
+- Persona handles (linked to `identity/<HANDLE>.md`)
+- Skill inventory with frontmatter descriptions
+- Command inventory
+- Declared streams (reads / writes)
+- Grimoire paths you compose through (SEED §12)
+- Install instructions
+
+You don't need to maintain that file — run `.claude/scripts/butterfreezone-construct-gen.sh <pack-path>` in a Loa-equipped repo to regenerate. Keep your hand-authored `README.md` for humans; `CONSTRUCT-README.md` is for agents.
 
 ---
 
